@@ -51,30 +51,38 @@ function ItemList({ navigation, data }) {
 const Home = ({ navigation }) => {
     const [data, setData] = useState({});
     const [findText, setFindText] = useState('');
+    const [isRefresh, setIsRefresh] = useState(false);
 
-    let listData = useSelector(state => state.Movies.movies);
+    const listData = useSelector(state => state.Movies.movies);
     const dispatch = useDispatch();
 
     useEffect(() => {
         // if (findText) listData = dispatch(findItem(findText));
         setData(listData);
+        return () => {
+
+        }
     }, []);
 
     const handleFindData = (text) => {
-        // if (Text) {
-        //     const findTextUpper = text.toUpperCase();
-        //     const newData = Movies.filter((item) => {
-        //         const itemdata = item.name ? item.name.toUpperCase() : ''.toUpperCase();
-        //         return itemdata.indexOf(findTextUpper) > -1;
-        //     });
+        if (Text) {
+            const findTextUpper = text.toUpperCase();
+            const newData = listData.filter((item) => {
+                const itemdata = item.name ? item.name.toUpperCase() : ''.toUpperCase();
+                return itemdata.indexOf(findTextUpper) > -1;
+            });
 
-        //     // nếu đặt set data ở đây cứ mỗi lần nhập Text sẽ render lại useState/ gọi API 1 lần
-        //     // dẫn đến Loop k có hồi kết
-        //     // setData(newData);
-
-        //     //     // const findMovies = findItem(findTextUpper);
-        //     //     // setDate(dispatch(findMovies));
-        // }
+            // nếu đặt set data ở đây cứ mỗi lần nhập Text sẽ render lại useState/ gọi API 1 lần
+            // dẫn đến Loop k có hồi kết
+            setData(newData);
+            setFindText(Text);
+        }
+        else {
+            setData(listData);
+            setFindText(Text);
+        }
+        // const findMovies = findItem(findTextUpper);
+        // setDate(dispatch(findMovies));
     }
 
     return (
@@ -87,12 +95,13 @@ const Home = ({ navigation }) => {
                     <TextInput
                         style={styles.TextInput}
                         placeholder='Nhập tên cần tìm'
-                        onChangeText={(text) => setFindText(text)}
+                        value={findText}
+                        onChangeText={(text) => handleFindData(text)}
                     >
                     </TextInput>
                     <TouchableOpacity
                         style={styles.btnFnd}
-                        onPress={() => handleFindData(findText)}
+                        onPress={() => { }}
                     >
                         <Text style={styles.txtButton}>Tìm</Text>
                     </TouchableOpacity>
@@ -114,6 +123,8 @@ const Home = ({ navigation }) => {
                             showsVerticalScrollIndicator={false}
                             data={data}
                             keyExtractor={(item) => item.id}
+                            refreshing={isRefresh}
+                            onRefresh={() => { }}
                             renderItem={({ item }) =>
                                 <ItemList
                                     data={item}
