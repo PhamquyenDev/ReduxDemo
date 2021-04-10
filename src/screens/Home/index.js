@@ -2,14 +2,18 @@ import React, { useEffect, useState } from "react";
 import {
     FlatList,
     Image, Text,
-    TextInput, TouchableOpacity, View
+    TextInput,
+    TouchableOpacity, View
 } from "react-native";
 import { useDispatch, useSelector } from 'react-redux';
-import { findItem } from "../../actions/Movies";
 import Header from "../../components/header";
 import styles from "./styles";
+import Movies from './../../services/Movies';
 
 function ItemList({ navigation, data }) {
+
+    const imageUri = 'https://image.tmdb.org/t/p/w500/';
+
     return (
         <View style={styles.items}>
             <TouchableOpacity onPress={() => navigation.navigate('Detail', {
@@ -18,28 +22,20 @@ function ItemList({ navigation, data }) {
                 <View style={styles.contentContainer}>
                     <Image
                         style={styles.image}
-                        source={{
-                            uri: data.thumbImage
-                        }}
+                        source={{ uri: imageUri + data.poster_path }}
                     ></Image>
                     <View style={styles.contentItem}>
                         <Text style={styles.header} numberOfLines={2}>
-                            {data.name}
+                            {data.title}
                         </Text>
                         <Text style={styles.label} >
-                            Đạo Diễn: {data.author}
-                        </Text>
-                        <Text style={styles.label} numberOfLines={2}>
-                            Thể loại: {data.category}
+                            Đạo Diễn: Phạm Quyền
                         </Text>
                         <Text style={styles.label}>
-                            Ngày chiếu: {data.premeiretime}
+                            Ngày chiếu: {data.release_date}
                         </Text>
                         <Text style={styles.label} >
-                            Thời lượng: {data.time}
-                        </Text>
-                        <Text style={styles.label, styles.status} >
-                            Trang thái: {data.status}
+                            Đánh giá: {data.vote_average}
                         </Text>
                     </View>
                 </View>
@@ -48,21 +44,26 @@ function ItemList({ navigation, data }) {
     );
 }
 
-const Home = ({ navigation }) => {
-    const [data, setData] = useState({});
-    const [findText, setFindText] = useState('');
-    const [isRefresh, setIsRefresh] = useState(false);
 
-    const listData = useSelector(state => state.Movies.movies);
+const Home = ({ navigation }) => {
+
+    const [findText, setFindText] = useState('');
+    const [isRefresh, setRefreshing] = useState(false);
+
     const dispatch = useDispatch();
+    const { data } = useSelector(state => state);
+    console.log(data);
 
     useEffect(() => {
-        // if (findText) listData = dispatch(findItem(findText));
-        setData(listData);
-        return () => {
-
-        }
+        dispatch({ type: "API_CALL_REQUEST" });
     }, []);
+
+    const onRefresh = React.useCallback(() => {
+        setRefreshing(true);
+
+        dispatch({ type: "API_CALL_REQUEST" })
+        setRefreshing(false)
+    }, [isRefresh]);
 
     const handleFindData = (text) => {
         if (Text) {
@@ -71,18 +72,13 @@ const Home = ({ navigation }) => {
                 const itemdata = item.name ? item.name.toUpperCase() : ''.toUpperCase();
                 return itemdata.indexOf(findTextUpper) > -1;
             });
-
-            // nếu đặt set data ở đây cứ mỗi lần nhập Text sẽ render lại useState/ gọi API 1 lần
-            // dẫn đến Loop k có hồi kết
             setData(newData);
             setFindText(Text);
         }
         else {
             setData(listData);
             setFindText(Text);
-        }
-        // const findMovies = findItem(findTextUpper);
-        // setDate(dispatch(findMovies));
+        };
     }
 
     return (
@@ -95,7 +91,6 @@ const Home = ({ navigation }) => {
                     <TextInput
                         style={styles.TextInput}
                         placeholder='Nhập tên cần tìm'
-                        value={findText}
                         onChangeText={(text) => handleFindData(text)}
                     >
                     </TextInput>
@@ -121,10 +116,10 @@ const Home = ({ navigation }) => {
                     <View style={styles.sectionItems}>
                         <FlatList
                             showsVerticalScrollIndicator={false}
-                            data={data}
+                            data={Movies}
                             keyExtractor={(item) => item.id}
                             refreshing={isRefresh}
-                            onRefresh={() => { }}
+                            onRefresh={onRefresh} // goi lai data luc dau
                             renderItem={({ item }) =>
                                 <ItemList
                                     data={item}
