@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+    ActivityIndicator,
     FlatList,
     Image, Text,
     TextInput,
@@ -7,8 +8,8 @@ import {
 } from "react-native";
 import { useDispatch, useSelector } from 'react-redux';
 import Header from "../../components/header";
+import { findItem } from './../../actions/Movies';
 import styles from "./styles";
-import Movies from './../../services/Movies';
 
 function ItemList({ navigation, data }) {
 
@@ -46,40 +47,72 @@ function ItemList({ navigation, data }) {
 
 
 const Home = ({ navigation }) => {
-
-    const [findText, setFindText] = useState('');
-    const [isRefresh, setRefreshing] = useState(false);
-
     const dispatch = useDispatch();
-    const { data } = useSelector(state => state);
-    console.log(data);
+    //const [data, setData] = useState({});
 
     useEffect(() => {
         dispatch({ type: "API_CALL_REQUEST" });
     }, []);
 
-    const onRefresh = React.useCallback(() => {
-        setRefreshing(true);
+    // ----------- tìm kiếm
+    const [findText, setFindText] = useState('');
+    const handleFindData = (Text) => {
+        // ----------- khi chưa có redux
+        // if (Text) {
+        //     const findTextUpper = Text.toUpperCase();
+        //     const newData = data.filter((item) => {
+        //         const itemdata = item.name ? item.name.toUpperCase() : ''.toUpperCase();
+        //         return itemdata.indexOf(findTextUpper) > -1;
+        //     });
+        //     setData(newData);
+        //     setFindText(Text);
+        // }
+        // else {
+        //     setData(data); 
+        //     setFindText(Text);
+        // };
 
-        dispatch({ type: "API_CALL_REQUEST" })
-        setRefreshing(false)
-    }, [isRefresh]);
-
-    const handleFindData = (text) => {
+        // ----------- khi có redux/redux-saga
         if (Text) {
-            const findTextUpper = text.toUpperCase();
-            const newData = listData.filter((item) => {
-                const itemdata = item.name ? item.name.toUpperCase() : ''.toUpperCase();
-                return itemdata.indexOf(findTextUpper) > -1;
-            });
-            setData(newData);
+            dispatch({ type: "API_FILTER_REQUEST" });
             setFindText(Text);
         }
-        else {
-            setData(listData);
-            setFindText(Text);
-        };
     }
+
+    // ----------- render biểu tượng loading ở cuối
+    const [isLoading, setIsLoading] = useState(false);
+    const renderFooter = () => {
+        return (
+            isLoading ?
+                <View style={styles.footerLoading}>
+                    <Text>Loading...</Text>
+                </View> : null
+        );
+    };
+
+    // ----------- hendle loading more data
+    const heanleLoadMore = React.useCallback(() => {
+        const currentPage = select();
+        console.log(currentPage);
+        setIsLoading(true);
+        dispatch({ type: "API_MORE_REQUEST" });
+    }, [isLoading]);
+    // () => {
+    //     setIsLoading(true);
+    //     dispatch({ type: "API_MORE_REQUEST" });
+    //     setIsLoading(false);
+    // };
+
+    // ----------- select data
+    const data = useSelector(state => state.Movies.movies);
+    console.log(data);
+    // ----------- reloading
+    const [isRefresh, setRefreshing] = useState(false);
+    const onRefresh = React.useCallback(() => {
+        setRefreshing(true);
+        dispatch({ type: "API_CALL_REQUEST" });
+        setRefreshing(false)
+    }, [isRefresh]);
 
     return (
         <View style={styles.wrap}>
@@ -116,10 +149,16 @@ const Home = ({ navigation }) => {
                     <View style={styles.sectionItems}>
                         <FlatList
                             showsVerticalScrollIndicator={false}
-                            data={Movies}
+                            data={data}
                             keyExtractor={(item) => item.id}
+                            // ----------- refreshing
                             refreshing={isRefresh}
-                            onRefresh={onRefresh} // goi lai data luc dau
+                            onRefresh={onRefresh}
+                            // ----------- Loading
+                            ListFooterComponent={renderFooter}
+                            onEndReached={heanleLoadMore}
+                            onEndReachedThreshold={0}
+                            // ----------- render items
                             renderItem={({ item }) =>
                                 <ItemList
                                     data={item}

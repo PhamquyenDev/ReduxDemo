@@ -8,7 +8,9 @@ import styles from "./styles";
 const Detail = ({ navigation }) => {
 
     const data = navigation.getParam('movies');
+    console.log(data);
 
+    const imageUri = 'https://image.tmdb.org/t/p/w500/';
     return (
         <View style={styles.wrap}>
             <Header
@@ -24,7 +26,7 @@ const Detail = ({ navigation }) => {
                         <Image
                             style={styles.imageBackgr}
                             source={{
-                                uri: data.backgroundImage
+                                uri: imageUri + data.poster_path
                             }}
                         ></Image>
                     </View>
@@ -48,25 +50,22 @@ const Detail = ({ navigation }) => {
                                 <Image
                                     style={{ width: '100%', height: '100%' }}
                                     source={{
-                                        uri: data.thumbImage
+                                        uri: imageUri + data.poster_path
                                     }}
                                 ></Image>
                             </View>
                             <View style={styles.IntroContent}>
                                 <View style={styles.item}>
-                                    <Text style={styles.infoName} numberOfLines={3}>{data.name}</Text>
-                                </View>
-                                <View style={styles.item} >
-                                    <Text style={styles.header} numberOfLines={3}>{data.category}</Text>
-                                </View>
-                                <View style={styles.item} >
-                                    <Text style={styles.header} numberOfLines={3}>{data.author}</Text>
+                                    <Text style={styles.infoName} numberOfLines={3}>{data.title}</Text>
                                 </View>
                                 <View style={styles.item}>
-                                    <Text style={styles.header}>Thời Lượng: {data.time}</Text>
+                                    <Text style={styles.header}>Khởi chiếu: {data.release_date}</Text>
                                 </View>
-                                <View style={styles.item}>
-                                    <Text style={styles.header}>{data.status}</Text>
+                                <View style={styles.item} >
+                                    <Text style={styles.header} numberOfLines={3}>View: {data.popularity}</Text>
+                                </View>
+                                <View style={styles.item} >
+                                    <Text style={styles.header} numberOfLines={3}>Vote :{data.vote_average}</Text>
                                 </View>
                             </View>
                         </View>
@@ -75,7 +74,7 @@ const Detail = ({ navigation }) => {
                                 <Text style={styles.infoName}>NỘI DUNG PHIM</Text>
                             </View>
                             <View style={styles.desTitle}>
-                                <Text style={styles.desIntro} numberOfLines={15}>{data.summary}</Text>
+                                <Text style={styles.desIntro} numberOfLines={15}>{data.overview}</Text>
                             </View>
                         </View>
                     </View>

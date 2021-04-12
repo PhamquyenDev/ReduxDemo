@@ -79,9 +79,9 @@ const styles = StyleSheet.create({
         fontSize: 15,
         marginBottom: 10,
     },
-    status: {
-        color: 'red',
-        fontWeight: 'bold'
+    footerLoading: {
+        flex: 1,
+        alignItems: 'center'
     }
 });
 

@@ -5,14 +5,15 @@ import {
 export const findItem = (findName) => {
     return {
         type: FIND,
-        findName
+        findName: findName
     }
 }
 
-export const loadMoreData = (value) => {
+export const loadMoreData = (data, page) => {
     return {
         type: LOAD_MORE,
-        value
+        movies: data.results,
+        page: page
     }
 }
 
@@ -23,10 +24,11 @@ export const reloadData = () => {
 }
 
 // redux saga actions
-export const loadSuccess = (moviesData) => {
+export const loadSuccess = (moviesData, page) => {
     return {
         type: LOAD_SUCCESS,
-        movies: moviesData.results
+        movies: moviesData.results,
+        page: page
     }
 }
 
