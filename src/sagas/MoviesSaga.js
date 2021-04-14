@@ -1,8 +1,11 @@
-import { fetchMoreMovies, fetchMovies } from "./API";
-import { useSelector } from "react-redux";
 import { call, put, select, takeLatest } from 'redux-saga/effects';
-import { FIND, LOAD_MORE, RELOAD, LOAD_SUCCESS, LOAD_ERROR } from "../actions/actionsType";
-import { findItem, loadMoreData, loadSuccess } from "../actions/Movies";
+import { LOAD_ERROR } from "../actions/actionsType";
+import {
+    findItem, loadMoreData, loadSuccess
+} from "../actions/Movies";
+import {
+    fetchMoreMovies, fetchMovies, fetchFilterMovies
+} from "./API";
 
 function* getMovies() {
     try {
@@ -16,23 +19,25 @@ function* getMovies() {
 
 function* getMoreMovies() {
     try {
-        const pageCurrent = yield select();
-        console.log(pageCurrent);
-        const res = yield call(fetchMoreMovies, pageCurrent);
-        console.log(res);
-        const moviesData = yield res.json();
-        console.log(moviesData);
-        yield put(loadMoreData(moviesData, moviesData.page));
+        let pageCurrent = yield select(state => state.Movies.pageCurrent);
+        const resp = yield call(fetchMoreMovies, pageCurrent + 1);
+        const movies = yield resp.json();
+        yield put(loadMoreData(movies));
     } catch (error) {
         console.log(error);
-        yield put({ type: LOAD_ERROR, error: error.message });
+        yield put({ type: LOAD_ERROR, error: error });
     }
 }
 
 function* getFilterMovies() {
     try {
-        const Text = yield select();
-        yield put(findItem(Text));
+        const filterTerm = yield select(state => state.Movies.filterName);
+        console.log(filterTerm);
+
+        // const resp = yield call(fetchFilterMovies, filterTerm);
+        // console.log(resp);
+
+        yield put(findItem(filterTerm));
     } catch (error) {
         yield put({ type: LOAD_ERROR, error: error.message });
     }
@@ -49,3 +54,13 @@ export function* watchFetchMoreData() {
 export function* watchFilterMovies() {
     yield takeLatest("API_FILTER_REQUEST", getFilterMovies);
 }
+
+
+// const resp = yield select(state => state.Movies.movies);
+//         console.log(resp);
+//         const findTextUpper = filterTerm.toUpperCase();
+//         const newData = resp.filter((item) => {
+//             const itemdata = item.name ? item.name.toUpperCase() : ''.toUpperCase();
+//             return itemdata.indexOf(findTextUpper) > -1;
+//         });
+//         console.log(newData);

@@ -80,8 +80,19 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     footerLoading: {
-        flex: 1,
+        width: '100%',
+        height: 40,
+        justifyContent: 'center',
         alignItems: 'center'
+    },
+    TopButton: {
+        position: 'absolute',
+        width: 50,
+        height: 50,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'blue',
+        borderRadius: 15
     }
 });
 

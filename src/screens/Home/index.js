@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
     ActivityIndicator,
     FlatList,
@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { useDispatch, useSelector } from 'react-redux';
 import Header from "../../components/header";
-import { findItem } from './../../actions/Movies';
+import { addFilterName } from './../../actions/Movies';
 import styles from "./styles";
 
 function ItemList({ navigation, data }) {
@@ -48,72 +48,102 @@ function ItemList({ navigation, data }) {
 
 const Home = ({ navigation }) => {
     const dispatch = useDispatch();
-    //const [data, setData] = useState({});
-
     useEffect(() => {
         dispatch({ type: "API_CALL_REQUEST" });
     }, []);
+    // --------------------------------------------------- select data
+    const data = useSelector(state => state.Movies.movies);
+    const typingRef = useRef(null);
+    // --------------------------------------------------- tìm kiếm
+    const [findText, setFindText] = useState(null);
+    // ----------------------- khi chưa có redux
+    // const handleFindData = (Text) => {
+    // if (Text) {
+    //     const findTextUpper = Text.toUpperCase();
+    //     const newData = data.filter((item) => {
+    //         const itemdata = item.name ? item.name.toUpperCase() : ''.toUpperCase();
+    //         return itemdata.indexOf(findTextUpper) > -1;
+    //     });
+    //     setData(newData);
+    //     setFindText(Text);
+    // }
+    // else {
+    //     setData(data); 
+    //     setFindText(Text);
+    // };
 
-    // ----------- tìm kiếm
-    const [findText, setFindText] = useState('');
-    const handleFindData = (Text) => {
-        // ----------- khi chưa có redux
-        // if (Text) {
-        //     const findTextUpper = Text.toUpperCase();
-        //     const newData = data.filter((item) => {
-        //         const itemdata = item.name ? item.name.toUpperCase() : ''.toUpperCase();
-        //         return itemdata.indexOf(findTextUpper) > -1;
-        //     });
-        //     setData(newData);
-        //     setFindText(Text);
-        // }
-        // else {
-        //     setData(data); 
-        //     setFindText(Text);
-        // };
+    //     if (Text) {
+    //         dispatch({ type: "API_FILTER_REQUEST" });
+    //         setFindText(Text);
+    //     }
+    // }
 
-        // ----------- khi có redux/redux-saga
-        if (Text) {
-            dispatch({ type: "API_FILTER_REQUEST" });
-            setFindText(Text);
+    // ----------------------- khi có redux/redux-saga
+    const handleFindDataUseRedux = (findText) => {
+        setIsLoading(true);
+
+        if (findText) {
+            // nếu clearTimeout thì khi findtext xóa trắng sẽ error
+            // vì sẽ else sau đó 0.2s useRef mới chạy
+            if (typingRef.current) {
+                clearTimeout(typingRef.current);
+            }
+            setFindText(findText);
+            typingRef.current = setTimeout(() => {
+                dispatch(addFilterName(findText));
+                if (findText) {
+                    dispatch({ type: "API_FILTER_REQUEST" });
+                }
+            }, 200);
         }
-    }
 
-    // ----------- render biểu tượng loading ở cuối
+        if (!findText) {
+            typingRef.current = setTimeout(() => {
+                dispatch({ type: "API_CALL_REQUEST" });
+                setFindText(findText);
+            }, 220);
+        }
+        setIsLoading(false);
+    };
+
+    // --------------------------------------------------- render biểu tượng loading ở cuối
     const [isLoading, setIsLoading] = useState(false);
     const renderFooter = () => {
         return (
             isLoading ?
                 <View style={styles.footerLoading}>
-                    <Text>Loading...</Text>
+                    <ActivityIndicator size='large' color='black' />
                 </View> : null
         );
     };
 
-    // ----------- hendle loading more data
+    // --------------------------------------------------- hendle loading more data
     const heanleLoadMore = React.useCallback(() => {
-        const currentPage = select();
-        console.log(currentPage);
         setIsLoading(true);
         dispatch({ type: "API_MORE_REQUEST" });
-    }, [isLoading]);
-    // () => {
-    //     setIsLoading(true);
-    //     dispatch({ type: "API_MORE_REQUEST" });
-    //     setIsLoading(false);
-    // };
 
-    // ----------- select data
-    const data = useSelector(state => state.Movies.movies);
-    console.log(data);
-    // ----------- reloading
+        // nếu find != null thì thực hiện lại lần search
+        if (findText) {
+            setTimeout(() => {
+                dispatch({ type: "API_FILTER_REQUEST" });
+            }, 200);
+        }
+    }, [findText]);
+
+    // --------------------------------------------------- reloading
     const [isRefresh, setRefreshing] = useState(false);
     const onRefresh = React.useCallback(() => {
+        setFindText('');
         setRefreshing(true);
         dispatch({ type: "API_CALL_REQUEST" });
         setRefreshing(false)
     }, [isRefresh]);
-
+    // --------------------------------------------------- handle move to Top
+    const listViewRef = useRef();
+    const topHandleButton = () => {
+        listViewRef.current.scrollToOffset({ animated: true, offset: 0 })
+    }
+    // --------------------------------------------------- Main
     return (
         <View style={styles.wrap}>
             <Header
@@ -124,7 +154,8 @@ const Home = ({ navigation }) => {
                     <TextInput
                         style={styles.TextInput}
                         placeholder='Nhập tên cần tìm'
-                        onChangeText={(text) => handleFindData(text)}
+                        value={findText}
+                        onChangeText={(text) => handleFindDataUseRedux(text)}
                     >
                     </TextInput>
                     <TouchableOpacity
@@ -150,14 +181,16 @@ const Home = ({ navigation }) => {
                         <FlatList
                             showsVerticalScrollIndicator={false}
                             data={data}
-                            keyExtractor={(item) => item.id}
+                            keyExtractor={(item, index) => item.id}
                             // ----------- refreshing
                             refreshing={isRefresh}
                             onRefresh={onRefresh}
                             // ----------- Loading
                             ListFooterComponent={renderFooter}
                             onEndReached={heanleLoadMore}
-                            onEndReachedThreshold={0}
+                            onEndReachedThreshold={0.1}
+                            // ----------- Move to Top
+                            ref={listViewRef}
                             // ----------- render items
                             renderItem={({ item }) =>
                                 <ItemList
@@ -169,6 +202,12 @@ const Home = ({ navigation }) => {
                     </View>
                 </View>
             </View>
+            <TouchableOpacity
+                style={[styles.TopButton, { right: 20, bottom: 20 }]}
+                onPress={topHandleButton}
+            >
+                <Text style={[styles.txtButton, { color: 'red' }]}>Top</Text>
+            </TouchableOpacity>
         </View>
     );
 };

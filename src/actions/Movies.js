@@ -1,19 +1,27 @@
 import {
-    FETCH_DATA, FIND, LOAD_MORE, RELOAD, LOAD_SUCCESS, LOAD_ERROR
+    FETCH_DATA, FIND, FILTER_NAME,
+    LOAD_MORE, RELOAD,
+    LOAD_SUCCESS, LOAD_ERROR,
 } from "./actionsType";
-
-export const findItem = (findName) => {
+export const addFilterName = (filterName) => {
+    return {
+        type: FILTER_NAME,
+        filterName
+    }
+}
+export const findItem = (filterName) => {
     return {
         type: FIND,
-        findName: findName
+        //movies: movies
+        filterName
     }
 }
 
-export const loadMoreData = (data, page) => {
+export const loadMoreData = (data) => {
     return {
         type: LOAD_MORE,
         movies: data.results,
-        page: page
+        pageCurrent: data.page
     }
 }
 

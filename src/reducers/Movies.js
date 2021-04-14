@@ -1,12 +1,15 @@
+import React from "react";
 import {
-    FETCH_DATA, FIND, LOAD_MORE, LOAD_SUCCESS, LOAD_ERROR
+    FETCH_DATA, FIND, LOAD_MORE,
+    LOAD_SUCCESS, LOAD_ERROR,
+    FILTER_NAME
 } from "../actions/actionsType";
 
 const iniitalState = {
     movies: null,
-    findName: '',
+    filterName: null,
     isLoading: false,
-    page: 1
+    pageCurrent: 1,
 };
 
 const MoviesReducer = (state = iniitalState, action) => {
@@ -14,7 +17,7 @@ const MoviesReducer = (state = iniitalState, action) => {
         case LOAD_SUCCESS:
             return {
                 movies: action.movies,
-                page: action.page
+                pageCurrent: action.page
             };
         case LOAD_ERROR:
             console.log(action)
@@ -24,31 +27,46 @@ const MoviesReducer = (state = iniitalState, action) => {
             };
 
         case FIND: {
-            if (action.findName) {
-                const findTextUpper = action.findName.toUpperCase();
-                const newData = movies.filter((item) => {
-                    const itemdata = item.name ? item.name.toUpperCase() : ''.toUpperCase();
-                    return itemdata.indexOf(findTextUpper) > -1;
-                });
-                return {
-                    movies: newData,
-                    findName: action.findName
-                }
-            }
-            else return {
-                ...state
+            console.log(action)
+            // return {
+            //     ...state,
+            //     movies: action.movies
+            // }
+
+            const findTextUpper = action.filterName.toUpperCase();
+            const newData = state.movies.filter((item) => {
+                const itemdata = item.title ? item.title.toUpperCase() : ''.toUpperCase();
+                return itemdata.indexOf(findTextUpper) > -1;
+            });
+            console.log(newData)
+            return {
+                ...state,
+                movies: newData,
+                filterName: action.filterName
             }
         }
 
-        case LOAD_MORE:
+        case FILTER_NAME:
             return {
                 ...state,
-                movies: [...state.movies, action.movies],
-                page: action.page
+                ...state.movies,
+                filterName: action.filterName
             };
+
+        case LOAD_MORE:
+            console.log(action);
+            return {
+                ...state,
+                movies: [
+                    ...state.movies,
+                    ...action.movies,
+                ],
+                pageCurrent: action.pageCurrent
+            }
 
         default: return state;
     }
+
 }
 
 export default MoviesReducer;
